@@ -1712,6 +1712,54 @@ int main(void)
 		\vspace{0.1cm}
 		\footnotesize\centering The D term is \emph{negative}: the error is falling fast, so the controller eases off to avoid overshoot.
 	\end{frame}
+	
+	\begin{frame}{How a Digital Controller Runs PID: The Control Cycle}
+		\vspace*{-0.3cm}
+		\begin{block}{The Measure---Compute---Output cycle}
+			A digital PID controller (PLC or microcontroller) repeats one basic cycle ---
+			the \textbf{control cycle} (or \textbf{scan}) --- once every \textbf{sample time $T$},
+			for as long as the loop is in AUTO.
+		\end{block}
+		\begin{columns}[T]
+			\begin{column}{0.55\textwidth}
+				\begin{enumerate}\small
+					\item \textbf{Measure} --- read the PV from the sensor / transmitter
+					(4--20 mA $\rightarrow$ ADC $\rightarrow$ number).
+					\item \textbf{Compare} --- work out the error $e[k] = \text{SP} - \text{PV}[k]$.
+					\item \textbf{Compute} --- add the three terms:
+					P $= K_p e[k]$, I $=$ running sum, D $=$ change since last cycle.
+					\item \textbf{Output} --- send $u[k]$ to the final control element
+					(DAC $\rightarrow$ 4--20 mA $\rightarrow$ valve / drive).
+					\item \textbf{Wait} --- the process responds; store $e[k]$ as $e[k-1]$
+					and repeat after $T$.
+				\end{enumerate}
+			\end{column}
+			\begin{column}{0.45\textwidth}
+				\centering
+				\begin{tikzpicture}[font=\scriptsize,
+					stage/.style={rectangle, rounded corners=4pt, draw=black, thick,
+						minimum width=1.9cm, minimum height=0.75cm, align=center}]
+					% centre of the cycle
+					\node[circle, draw=cAccent, thick, dashed, minimum size=1.7cm, align=center, text=cAccent]
+					(c) at (0,0) {repeat\\ every\\ $T$ s};
+					% the five stages, clockwise from the top
+					\node[stage, fill=cPurple!18] (m) at (90:2.0)   {\textbf{1. Measure}\\ read PV};
+					\node[stage, fill=cGreen!18]  (e) at (18:2.0)   {\textbf{2. Compare}\\ $e = \text{SP} - \text{PV}$};
+					\node[stage, fill=cOrange!22] (p) at (-54:2.0)  {\textbf{3. Compute}\\ $u = P + I + D$};
+					\node[stage, fill=cRed!15]    (o) at (-126:2.0) {\textbf{4. Output}\\ $u \rightarrow$ actuator};
+					\node[stage, fill=blue!10]    (w) at (162:2.0)  {\textbf{5. Wait}\\ process reacts};
+					% arrows around the cycle
+					\draw[flowarrow] (m) to[bend left=25] (e);
+					\draw[flowarrow] (e) to[bend left=25] (p);
+					\draw[flowarrow] (p) to[bend left=25] (o);
+					\draw[flowarrow] (o) to[bend left=25] (w);
+					\draw[flowarrow] (w) to[bend left=25] (m);
+				\end{tikzpicture}
+			\end{column}
+		\end{columns}
+		\vspace{0.1cm}
+		\footnotesize\centering The CPU's machine cycle runs \emph{inside} each stage; the control cycle is the slower loop the \emph{program} repeats.
+	\end{frame}
 
 	\begin{frame}[fragile, plain]{}
 
